@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3D-printer – Creality Ender-3 V3 KE</title>
+<meta name="description" content="Prosjektside for min Creality Ender-3 V3 KE: feilsøking, reservedeler, kalibrering og prosjektlogg.">
+<script>
+/* =====================================================================
+   PROSJEKTER & LOGG – rediger denne lista!
+   Legg til nye oppføringer øverst. Felt:
+     dato:   "ÅÅÅÅ-MM-DD"
+     tittel: kort tittel
+     tekst:  hva du gjorde / lærte
+     status: "ferdig" | "pågår" | "plan" | "problem"
+     eksempel: true  -> vises med «EKSEMPEL»-merke (slett feltet / oppføringen når du lager dine egne)
+   ===================================================================== */
+const LOGG = [
+  { dato: "2026-10-10", tittel: "Termistor-/overopphetingsfeil på hotenden", status: "pågår",
+    tekst: "Printeren ga temperaturfeil på hotenden. Plan: sjekke termistor-kontakter og flatkabel først, deretter bytte hotend (Creality 4001030130) og kjøre PID-kalibrering.",
+    eksempel: true },
+  { dato: "2026-09-01", tittel: "Første print: kalibreringskube 20 mm", status: "ferdig",
+    tekst: "PLA, 0,2 mm lag, 210 °C / 60 °C. Målte 20,0 × 20,1 × 19,9 mm.",
+    eksempel: true }
+];
+</script>
+<style>
+:root{
+  --bg:#121117;--panel:#1c1a23;--panel2:#25222f;--ink:#ece9f3;--muted:#a39fb2;
+  --accent:#7cc4ff;--accent2:#e2c275;--line:#34303f;--ok:#5fb37a;--warn:#e0a84f;--err:#e06a6a;
+  --radius:12px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,sans-serif}
+a{color:var(--accent)}
+.top{position:sticky;top:0;z-index:5;background:rgba(18,17,23,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.top .in{max-width:1000px;margin:0 auto;padding:10px 16px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.top .home{font-weight:700;color:var(--accent2);text-decoration:none;margin-right:auto}
+.top nav{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.92rem}
+.top nav a{color:var(--muted);text-decoration:none}.top nav a:hover{color:var(--ink)}
+.wrap{max-width:1000px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:clamp(1.7rem,4.5vw,2.4rem);margin:.2em 0 .1em}
+h1 span{color:var(--accent2)}
+h2{font-size:1.45rem;margin:0 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.1rem;margin:1.2em 0 .4em;color:var(--accent2)}
+section{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin:18px 0}
+.lead{color:var(--muted);margin-top:0}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:20px;align-items:start}
+img{max-width:100%;height:auto;border-radius:10px;display:block;background:#f3f3f3}
+figure{margin:0}figcaption{color:var(--muted);font-size:.85rem;margin-top:6px}
+.note{border-left:4px solid var(--warn);background:#2a2316;padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0}
+.note.ok{border-color:var(--ok);background:#17281e}
+.note.err{border-color:var(--err);background:#2c1719}
+.uncertain{display:inline-block;font-size:.75rem;padding:1px 7px;border-radius:999px;background:#3a2e14;color:#f1d6a6;border:1px solid #5a4520;vertical-align:1px}
+.src{font-size:.82rem;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:.94rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600}
+.tw{overflow-x:auto}
+code,pre{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:#0d0c12;border:1px solid var(--line);border-radius:6px}
+code{padding:1px 5px;font-size:.9em}
+pre{padding:10px 12px;overflow-x:auto;position:relative}
+.copy{position:absolute;top:6px;right:6px;font:inherit;font-size:.75rem;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:2px 8px;cursor:pointer}
+ol.steps{counter-reset:s;list-style:none;padding:0}
+ol.steps>li{counter-increment:s;position:relative;padding:10px 12px 10px 48px;margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:10px}
+ol.steps>li::before{content:counter(s);position:absolute;left:12px;top:10px;width:26px;height:26px;border-radius:50%;background:#1f3a52;color:var(--ink);display:grid;place-items:center;font-weight:700;font-size:.9rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px}
+.card h4{margin:0 0 4px}
+.price{color:var(--accent2);font-weight:700}
+.bad{color:var(--err);font-weight:700}
+.good{color:var(--ok);font-weight:700}
+.log{list-style:none;padding:0;margin:0}
+.log li{border-left:3px solid var(--line);padding:6px 0 12px 14px;margin-left:6px;position:relative}
+.log li::before{content:"";position:absolute;left:-7px;top:12px;width:11px;height:11px;border-radius:50%;background:var(--accent)}
+.log .d{color:var(--muted);font-size:.85rem}
+.badge{font-size:.72rem;padding:1px 8px;border-radius:999px;border:1px solid var(--line);margin-left:6px;vertical-align:2px}
+.b-ferdig{color:var(--ok)}.b-pågår{color:var(--accent)}.b-plan{color:var(--muted)}.b-problem{color:var(--err)}
+.b-eks{background:#3a2e14;color:#f1d6a6;border-color:#5a4520}
+ul.links{padding-left:1.1em}ul.links li{margin:4px 0}
+footer{color:var(--muted);font-size:.85rem;text-align:center;margin-top:30px}
+@media (max-width:720px){.two{grid-template-columns:1fr}section{padding:16px}}
+</style>
+</head>
+<body>
+<div class="top"><div class="in">
+  <a class="home" href="https://tussienorway.github.io/">← Alle nettsidene mine</a>
+  <nav>
+    <a href="#om">Om printeren</a><a href="#feil">Feilsøking</a><a href="#deler">Reservedeler</a>
+    <a href="#kal">Kalibrering</a><a href="#logg">Logg</a><a href="#lenker">Lenker</a>
+  </nav>
+</div></div>
+
+<main class="wrap">
+  <h1>3D-printer: <span>Creality Ender-3 V3 KE</span></h1>
+  <p class="lead">Min prosjektside for printeren – feilsøking, deler, kalibrering og hva jeg har printet.</p>
+
+  <!-- ================= OM ================= -->
+  <section id="om">
+    <h2>Om printeren</h2>
+    <div class="two">
+      <figure>
+        <img src="ender-3-v3-ke.jpg" alt="Creality Ender-3 V3 KE" width="1000" height="1000" loading="lazy">
+        <figcaption>Ender-3 V3 KE (offisielt produktbilde fra Creality).</figcaption>
+      </figure>
+      <div>
+        <p>Jeg tror printeren min er en <b>Ender-3 V3 KE</b> <span class="uncertain">ikke 100 % bekreftet</span>. Sjekk typeskiltet bak/under printeren for å være sikker – det avgjør hvilke reservedeler som passer.</p>
+        <p>Dette er bekreftet fra Creality sine egne sider om KE:</p>
+        <ul>
+          <li>Kjører <b>Creality OS</b>, som bygger på Klipper-firmware. <span class="src">(creality.com)</span></li>
+          <li>4,3" berøringsskjerm (480×272). <span class="src">(Creality Wiki, delelista for KE)</span></li>
+          <li>Automatisk nivellering med <b>CR Touch</b>. <span class="src">(delelista for KE)</span></li>
+          <li>Varmeseng 24 V / 270 W, 235×235 mm, og PEI-plate. <span class="src">(delelista for KE)</span></li>
+          <li>Hotend: <b>keramisk varmehode</b>, delenummer <code>4001030130</code>. <span class="src">(delelista for KE)</span></li>
+          <li>Strømforsyning 24 V / 350 W. <span class="src">(delelista for KE)</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Hvordan kjenne igjen V3, SE, KE og Plus</h3>
+    <figure>
+      <img src="ender-3-v3-serien-sammenligning.jpg" alt="Sammenligning av Ender-3 V3, V3 SE, V3 KE og V3 Plus" width="1024" height="285" loading="lazy">
+      <figcaption>Fra venstre: Ender-3 V3 (CoreXZ), V3 SE, V3 KE og V3 Plus. Offisielle produktbilder fra Creality.</figcaption>
+    </figure>
+    <div class="tw"><table>
+      <thead><tr><th>Modell</th><th>Kjennetegn</th><th>Hotend-delenummer</th></tr></thead>
+      <tbody>
+        <tr><td><b>V3 SE</b></td><td>Liten 3,2" fargeskjerm med <b>dreieknapp</b> (ikke berøring). Åpen ramme som KE.</td><td><code>4001030127</code> (aluminium-hotend, svart varmerør)</td></tr>
+        <tr><td><b>V3 KE</b></td><td>Ligner SE, men har <b>4,3" berøringsskjerm</b> uten knapp, foran til høyre.</td><td><code>4001030130</code> (keramisk varmehode, rødt)</td></tr>
+        <tr><td><b>V3</b></td><td><b>CoreXZ</b>: en høy, lukket metallramme rundt hele printeren, med tverrbjelke øverst.</td><td><code>4001030134</code> (keramisk hotend for V3/V3 Plus)</td></tr>
+        <tr><td><b>V3 Plus</b></td><td>Samme oppbygging som V3, men tydelig <b>større</b>.</td><td><code>4001030134</code> (samme som V3)</td></tr>
+      </tbody>
+    </table></div>
+    <p class="src">Kilder: Creality Wiki-delelistene for V3 SE og V3 KE. Nummeret for V3/V3 Plus kommer fra produktsidene til Creality, 3DJake og 123-3D. Beskrivelsen av utseendet er basert på bildene over.</p>
+  </section>
+
+  <!-- ================= FEILSØKING ================= -->
+  <section id="feil">
+    <h2>Feilsøking: termistor / hotend</h2>
+    <p class="lead">Printeren min har gitt termistor- eller overopphetingsfeil på hotenden. Slik går jeg fram, fra det enkleste til det dyreste.</p>
+    <div class="note err"><b>Sikkerhet:</b> Slå av printeren og trekk ut strømmen før du kobler fra noe. Hotenden kan holde over 200 °C lenge etter at den er slått av.</div>
+
+    <ol class="steps">
+      <li><b>Les feilkoden på skjermen.</b> Noter den i loggen nederst. Se tabellen under for hva koden betyr.</li>
+      <li><b>Sjekk temperaturen på skjermen når printeren er kald.</b> Romtemperatur (ca. 20 °C) er normalt. Viser den noe urimelig, for eksempel −14 °C eller over 300 °C, er det nesten alltid termistoren eller ledningen til den som er brudd eller kortsluttet.</li>
+      <li><b>Sjekk kontaktene først.</b> Det er gratis. Koble fra og sett inn igjen termistorledningen og flatkabelen fra hovedkortet til adapterkortet på printhodet. Se etter løse, bøyde eller brente pinner.</li>
+      <li><b>Sjekk ledningsføringen.</b> Se etter skader på kabelføringen langs X-aksen, spesielt der den bøyes når printhodet beveger seg.</li>
+      <li><b>Ta av silikonsokken og se på hotenden.</b> Er det sprekker i den keramiske varmeringen, skadde ledninger eller plast som har lekket ut? Sitter termistoren løst i holderen sin?</li>
+      <li><b>Test igjen.</b> Varm opp bare hotenden, for eksempel til 200 °C, og følg med på kurven. Klatrer den jevnt og holder seg stabilt, er feilen trolig løst.</li>
+      <li><b>Bytt hotend hvis feilen kommer tilbake.</b> På KE er termistoren en del av hotend-settet, så du bytter hele settet. Se <a href="#deler">Reservedeler</a>.</li>
+      <li><b>Etter byttet: kjør PID-kalibrering.</b> Se <a href="#kal">Kalibrering</a>.</li>
+    </ol>
+
+    <h3>Feilkoder for KE (temperatur)</h3>
+    <div class="tw"><table>
+      <thead><tr><th>Kode</th><th>Betydning (ifølge Creality)</th><th>Hva du gjør</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/troubleshooting/2092-error-trouble-shooting">2092</a></td><td>Temperaturen på dysen eller sengen er utenfor grensene (f.eks. −14 °C). Termistoren er frakoblet.</td><td>Finn ut hvilken del som viser feil temperatur, og bytt den (hotend-sett eller varmeseng).</td></tr>
+        <tr><td><a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/troubleshooting/2509-error-trouble-shooting">2509</a></td><td>Dysen varmes ikke opp. Flatkabelen eller termistorledningen sitter ikke riktig.</td><td>Sjekk og sett inn igjen flatkabelen og termistorledningen.</td></tr>
+        <tr><td><a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/troubleshooting/2564-error-trouble-shooting">2564</a></td><td>Dysen når ikke ønsket temperatur.</td><td>Sjekk ledningene til adapterkortet, se etter skader på den keramiske varmeringen, og mål spenningen på hovedkortet med multimeter.</td></tr>
+        <tr><td><a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/troubleshooting/2510-error-trouble-shooting">2510</a> / <a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/troubleshooting/2565-error-trouble-shooting">2565</a></td><td>Varmesengen varmes ikke opp eller når ikke temperaturen.</td><td>Sett inn igjen ledningen og termistoren til sengen.</td></tr>
+        <tr><td><a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/troubleshooting/2000-error-trouble-shooting">2000</a></td><td>Kommer ofte sammen med andre koder.</td><td>Løs den andre koden først. Kommer bare 2000, eksporter loggen og send den til Creality.</td></tr>
+      </tbody>
+    </table></div>
+    <p class="src">Kilde: <a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/troubleshooting">Creality Wiki – feilsøking for Ender-3 V3 KE</a>. Creality sitt generelle råd ved for høy dysetemperatur ved oppstart er å starte på nytt, kjøre automatisk PID og koble termistorledningen fra og til igjen.</p>
+  </section>
+
+  <!-- ================= RESERVEDELER ================= -->
+  <section id="deler">
+    <h2>Reservedeler</h2>
+    <div class="note ok"><b>Riktig hotend for KE: Creality <code>4001030130</code></b> (keramisk varmehode). Det er dette nummeret som står i Creality sin offisielle deleliste for Ender-3 V3 KE.</div>
+    <div class="cards">
+      <div class="card"><h4>3DJake – Creality Hotend (4001030130)</h4><p class="price">ca. 245 kr</p><p><a href="https://www.3djake.no/creality-3d-skrivere-og-reservedeler/hotend-4?sai=16789">Åpne hos 3DJake ↗</a></p><p class="src">Prisen ble sjekket 10.10.2026 og kan endre seg.</p></div>
+      <div class="card"><h4>Polyalkemi – Hotend for Ender-3 V3 KE</h4><p class="price">ca. 299 kr</p><p><a href="https://polyalkemi.no/polysmart/104844/hotend-for-ender-3-v3-ke">Åpne hos Polyalkemi ↗</a></p><p class="src">Norsk butikk. Prisen kan endre seg.</p></div>
+      <div class="card"><h4>Creality EU – Ender-3 V3 KE Ceramic Heating Block Kit</h4><p>Bare den keramiske varmeblokken, ikke hele hotenden. Rett fra Creality.</p><p><a href="https://store.creality.com/eu/products/ender-3-v3-ke-ceramic-heating-block-kit">Åpne hos Creality ↗</a></p></div>
+      <div class="card"><h4>3DJake – alle reservedeler til KE</h4><p>Oversikt over deler som passer KE: dyser, plater, vifter og mer.</p><p><a href="https://www.3djake.no/spareparts/reservedeler-til-creality-ender-3-v3-ke">Åpne hos 3DJake ↗</a></p></div>
+    </div>
+    <div class="note err"><span class="bad">Passer IKKE på KE:</span> den keramiske hotenden <code>CRE-4001030134</code> (ca. 368 kr hos 3DJake). Den er laget for <b>Ender-3 V3 og V3 Plus</b>. Har du en SE, trenger du <code>4001030127</code>.</div>
+    <p class="src">Kilde: <a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/parts-list">Creality Wiki – delelisten for Ender-3 V3 KE</a>. Der står også dysesettet <code>4004020070</code>, hovedkortet <code>4002020068</code> og CR Touch <code>4001010027</code>.</p>
+  </section>
+
+  <!-- ================= KALIBRERING ================= -->
+  <section id="kal">
+    <h2>Vedlikehold &amp; kalibrering</h2>
+
+    <h3>1. PID-kalibrering av hotenden (etter bytte!)</h3>
+    <p>PID-kalibrering lærer printeren hvordan den nye hotenden varmes opp, så temperaturen holder seg stabil. Kjør kommandoene i konsollen, for eksempel i Fluidd/Mainsail eller via Creality Print. Vent til målingen er ferdig (noen minutter) før du lagrer.</p>
+    <pre><code>PID_CALIBRATE HEATER=extruder TARGET=220
+SAVE_CONFIG</code></pre>
+    <p>For varmesengen (valgfritt):</p>
+    <pre><code>PID_CALIBRATE HEATER=heater_bed TARGET=60
+SAVE_CONFIG</code></pre>
+    <p class="src">Kommandoene er standard i Klipper (<a href="https://www.klipper3d.org/Config_checks.html">Klipper: Config checks</a>). Ifølge Creality er firmwaren på KE basert på Klipper. <span class="uncertain">usikkert</span> Hvordan du kommer til konsollen på KE kan avhenge av firmwareversjonen: skjermen, Creality Print, eller Fluidd/Mainsail med root-tilgang.</p>
+
+    <h3>2. E-steps / rotation_distance (ekstruderen)</h3>
+    <p>I Klipper heter «e-steps» <code>rotation_distance</code>. Du trenger bare å justere den hvis printeren mater for mye eller for lite filament. Slik gjør du det:</p>
+    <ol>
+      <li>Varm opp hotenden og merk filamentet 120 mm over inngangen til ekstruderen.</li>
+      <li>Mat ut 100 mm sakte, for eksempel med <code>G91</code> og så <code>G1 E100 F60</code>.</li>
+      <li>Mål hvor mye som er igjen til merket. Hvis det står igjen 20 mm, ble det matet riktig.</li>
+      <li>Ny verdi = gammel <code>rotation_distance</code> × (faktisk matet ÷ 100).</li>
+    </ol>
+    <p class="src">Metode: <a href="https://www.klipper3d.org/Rotation_Distance.html">Klipper: Rotation distance</a>. <span class="uncertain">usikkert</span> Om og hvordan <code>printer.cfg</code> kan endres på KE uten root, er ikke bekreftet. Fabrikkverdien er normalt riktig.</p>
+
+    <h3>3. Nivellering av sengen</h3>
+    <ul>
+      <li>KE nivellerer automatisk med CR Touch. Start den fra skjermen. I Klipper heter kommandoen <code>BED_MESH_CALIBRATE</code> (<a href="https://www.klipper3d.org/Bed_Mesh.html">Klipper: Bed mesh</a>).</li>
+      <li>Rengjør platen først. Ifølge Creality kan plastrester eller lim på platen gi feil nivellering, så modellen ikke fester seg.</li>
+      <li>Nivellér på nytt etter et hotend-bytte, siden dysehøyden kan ha endret seg.</li>
+    </ul>
+
+    <h3>4. Første lag</h3>
+    <ul>
+      <li>Juster <b>Z-offset</b> på skjermen mens du printer første lag. Linjene skal være litt flate og ligge tett inntil hverandre, uten å være gjennomsiktige.</li>
+      <li>Tørk av PEI-platen (for eksempel med isopropanol) og unngå fingermerker.</li>
+      <li>Første lag bør printes sakte og litt tykkere enn resten. Bruk standardprofilen for KE i sliceren som utgangspunkt.</li>
+      <li>Ifølge Creality slites platen over tid. Fester ikke modellene seg lenger, kan du bruke lim eller bytte plate.</li>
+    </ul>
+
+    <h3>5. Jevnlig vedlikehold (ifølge Creality)</h3>
+    <ul>
+      <li>Fjern plastrester under platen og rundt akslingene før hver print.</li>
+      <li>Bytt dyse etter ca. <b>500 timer</b> med printing. Varm hotenden opp til 200 °C før du bytter.</li>
+      <li>Sjekk at ekstruderingen er normal etter hvert filamentbytte.</li>
+    </ul>
+    <p class="src">Kilde: <a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/maintenance">Creality Wiki – vedlikehold av Ender-3 V3 KE</a>. Tipsene om første lag er generelle tips og kommer ikke fra Creality.</p>
+  </section>
+
+  <!-- ================= LOGG ================= -->
+  <section id="logg">
+    <h2>Prosjekter &amp; logg</h2>
+    <p class="lead">Lista ligger øverst i <code>index.html</code>, i <code>LOGG</code>. Oppføringene merket <span class="badge b-eks">EKSEMPEL</span> er bare eksempler. Bytt dem ut med dine egne.</p>
+    <ul class="log" id="logList"></ul>
+  </section>
+
+  <!-- ================= LENKER ================= -->
+  <section id="lenker">
+    <h2>Nyttige lenker</h2>
+    <h3>Creality (offisielt)</h3>
+    <ul class="links">
+      <li><a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke">Creality Wiki – Ender-3 V3 KE (brukerhåndbok, oppstart)</a></li>
+      <li><a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/troubleshooting">Creality Wiki – feilsøking for KE (alle feilkoder)</a></li>
+      <li><a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/parts-list">Creality Wiki – delelisten for KE</a></li>
+      <li><a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/maintenance">Creality Wiki – vedlikehold av KE</a></li>
+      <li><a href="https://www.creality.com/products/creality-ender-3-v3-ke">Creality – produktsiden for Ender-3 V3 KE</a></li>
+      <li><a href="https://www.creality.com/download">Creality – nedlastinger (firmware, Creality Print)</a></li>
+      <li><a href="https://github.com/CrealityOfficial/Ender-3_V3_KE_Klipper">GitHub – Creality sin åpne Klipper-kildekode for KE</a></li>
+      <li><a href="https://www.youtube.com/playlist?list=PLW9O3eZmo5E1Y-JjOW7etC2Y-cVAVkaLj">YouTube – Creality sine servicevideoer for Ender-3 V3-serien</a> <span class="uncertain">laget for V3, mange gjelder også KE</span></li>
+    </ul>
+    <h3>Klipper og slicer</h3>
+    <ul class="links">
+      <li><a href="https://www.klipper3d.org/Config_checks.html">Klipper – PID-kalibrering og grunnsjekker</a></li>
+      <li><a href="https://www.klipper3d.org/Rotation_Distance.html">Klipper – rotation_distance (e-steps)</a></li>
+      <li><a href="https://www.klipper3d.org/Bed_Mesh.html">Klipper – bed mesh (nivellering)</a></li>
+      <li><a href="https://www.klipper3d.org/G-Codes.html">Klipper – oversikt over kommandoer</a></li>
+      <li><a href="https://www.orcaslicer.com/">OrcaSlicer – gratis slicer med profil for KE</a></li>
+    </ul>
+    <h3>Butikker</h3>
+    <ul class="links">
+      <li><a href="https://www.3djake.no/spareparts/reservedeler-til-creality-ender-3-v3-ke">3DJake – reservedeler til KE</a></li>
+      <li><a href="https://polyalkemi.no/polysmart/104844/hotend-for-ender-3-v3-ke">Polyalkemi – hotend for KE</a></li>
+      <li><a href="https://store.creality.com/eu/collections/hotend">Creality EU-butikk – hotends</a></li>
+    </ul>
+  </section>
+
+  <footer>
+    <p><a href="https://tussienorway.github.io/">← Tilbake til oversikten over alle nettsidene mine</a></p>
+    <p>Produktbildene tilhører Creality. Priser og lagerstatus kan endre seg, så sjekk alltid i butikken.</p>
+  </footer>
+</main>
+
+<script>
+(function(){
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fmt = new Intl.DateTimeFormat('nb-NO', { day:'numeric', month:'long', year:'numeric', timeZone:'Europe/Oslo' });
+  const dato = d => { const t = new Date(d + 'T12:00:00Z'); return isNaN(t) ? esc(d) : fmt.format(t); };
+  const list = [...LOGG].sort((a,b) => String(b.dato).localeCompare(String(a.dato)));
+  document.getElementById('logList').innerHTML = list.length ? list.map(e => `
+    <li><div class="d">${dato(e.dato)}</div>
+      <b>${esc(e.tittel)}</b>
+      ${e.status ? `<span class="badge b-${esc(e.status)}">${esc(e.status)}</span>` : ''}
+      ${e.eksempel ? '<span class="badge b-eks">EKSEMPEL</span>' : ''}
+      <div>${esc(e.tekst)}</div></li>`).join('') : '<li>Ingen oppføringer ennå.</li>';
+
+  document.querySelectorAll('pre').forEach(pre => {
+    const b = document.createElement('button'); b.className = 'copy'; b.type = 'button'; b.textContent = 'Kopier';
+    b.onclick = async () => { try { await navigator.clipboard.writeText(pre.innerText.replace(/Kopier(t)?$/, '').trim()); b.textContent = 'Kopiert'; setTimeout(() => b.textContent = 'Kopier', 1500); } catch { b.textContent = 'Merk og kopier'; } };
+    pre.appendChild(b);
+  });
+})();
+</script>
+</body>
+</html>
