@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>3D-printer – Creality Ender-3 V3 KE</title>
-<meta name="description" content="Prosjektside for min Creality Ender-3 V3 KE: feilsøking, reservedeler, kalibrering og prosjektlogg.">
+<meta name="description" content="Prosjektside for min Creality Ender-3 V3 KE: feilsøking, kabelføring, bytte av hotend, reservedeler, kalibrering og prosjektlogg.">
 <script>
 /* =====================================================================
    PROSJEKTER & LOGG – rediger denne lista!
@@ -32,6 +32,7 @@ const LOGG = [
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:70px}
+@media (max-width:720px){html{scroll-padding-top:120px}}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,sans-serif}
 a{color:var(--accent)}
 .top{position:sticky;top:0;z-index:5;background:rgba(18,17,23,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
@@ -78,16 +79,18 @@ ol.steps>li::before{content:counter(s);position:absolute;left:12px;top:10px;widt
 .badge{font-size:.72rem;padding:1px 8px;border-radius:999px;border:1px solid var(--line);margin-left:6px;vertical-align:2px}
 .b-ferdig{color:var(--ok)}.b-pågår{color:var(--accent)}.b-plan{color:var(--muted)}.b-problem{color:var(--err)}
 .b-eks{background:#3a2e14;color:#f1d6a6;border-color:#5a4520}
+ul.check{list-style:none;padding:0}ul.check li{margin:6px 0}ul.check label{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;cursor:pointer}ul.check input{flex:none;width:20px;height:20px;margin-top:3px;accent-color:var(--ok)}
 ul.links{padding-left:1.1em}ul.links li{margin:4px 0}
 footer{color:var(--muted);font-size:.85rem;text-align:center;margin-top:30px}
-@media (max-width:720px){.two{grid-template-columns:1fr}section{padding:16px}}
+@media (max-width:720px){.two{grid-template-columns:1fr}section{padding:16px}ol.steps>li{padding-left:44px}}
+code{overflow-wrap:anywhere}
 </style>
 </head>
 <body>
 <div class="top"><div class="in">
   <a class="home" href="https://tussienorway.github.io/">← Alle nettsidene mine</a>
   <nav>
-    <a href="#om">Om printeren</a><a href="#feil">Feilsøking</a><a href="#deler">Reservedeler</a>
+    <a href="#om">Om printeren</a><a href="#feil">Feilsøking</a><a href="#kabler">Kabler</a><a href="#hotend">Bytte hotend</a><a href="#deler">Reservedeler</a>
     <a href="#kal">Kalibrering</a><a href="#logg">Logg</a><a href="#lenker">Lenker</a>
   </nav>
 </div></div>
@@ -148,7 +151,7 @@ footer{color:var(--muted);font-size:.85rem;text-align:center;margin-top:30px}
       <li><b>Sjekk ledningsføringen.</b> Se etter skader på kabelføringen langs X-aksen, spesielt der den bøyes når printhodet beveger seg.</li>
       <li><b>Ta av silikonsokken og se på hotenden.</b> Er det sprekker i den keramiske varmeringen, skadde ledninger eller plast som har lekket ut? Sitter termistoren løst i holderen sin?</li>
       <li><b>Test igjen.</b> Varm opp bare hotenden, for eksempel til 200 °C, og følg med på kurven. Klatrer den jevnt og holder seg stabilt, er feilen trolig løst.</li>
-      <li><b>Bytt hotend hvis feilen kommer tilbake.</b> På KE er termistoren en del av hotend-settet, så du bytter hele settet. Se <a href="#deler">Reservedeler</a>.</li>
+      <li><b>Bytt hotend hvis feilen kommer tilbake.</b> På KE er termistoren en del av hotend-settet, så du bytter hele settet. Se <a href="#deler">Reservedeler</a> og <a href="#hotend">steg-for-steg-guiden</a>.</li>
       <li><b>Etter byttet: kjør PID-kalibrering.</b> Se <a href="#kal">Kalibrering</a>.</li>
     </ol>
 
@@ -164,6 +167,128 @@ footer{color:var(--muted);font-size:.85rem;text-align:center;margin-top:30px}
       </tbody>
     </table></div>
     <p class="src">Kilde: <a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/troubleshooting">Creality Wiki – feilsøking for Ender-3 V3 KE</a>. Creality sitt generelle råd ved for høy dysetemperatur ved oppstart er å starte på nytt, kjøre automatisk PID og koble termistorledningen fra og til igjen.</p>
+  </section>
+
+  <!-- ================= KABELFØRING VED MONTERING ================= -->
+  <section id="kabler">
+    <h2>Legge kablene når du monterer printeren</h2>
+    <p class="lead">Kablene er det siste steget i Crealitys monteringsguide (kapittelet «Equipment wiring»). Her er den offisielle tegningen og stegene, med mine notater om hvor det lett går galt.</p>
+
+    <figure>
+      <a href="kabelforing-ender-3-v3-ke.png" target="_blank" rel="noopener"><img src="kabelforing-ender-3-v3-ke.png" alt="Creality sin tegning av kabelføringen på Ender-3 V3 KE: én kabel fra Z-motoren og opp til X-motoren, og derfra til adapterkortet på printhodet" width="1359" height="877" loading="lazy"></a>
+      <figcaption>Kabelføring på Ender-3 V3 KE. Trykk på bildet for å åpne det i full størrelse. Tegning fra <a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/quick-start-guide/how-to-assemble-equipment-quickly">Creality Wiki</a> (tilhører Creality). Teksten på tegningen er på engelsk, oversatt under.</figcaption>
+    </figure>
+
+    <h3>Slik står det på tegningen</h3>
+    <ol class="steps">
+      <li><b>Kabelen inn i adapterkortet på printhodet.</b> Sett først «nozzle wire»-kabelen inn i adapterkortet. Sett deretter på festeklemmen («FFC fixing clip») og skru den fast med M3×8-skruer. <span class="src">(Creality Wiki, tegning ①. Video: <a href="https://youtu.be/rhe1TS9Ju2M">Ender-3 V3 KE unpacking</a>, ca. 1:35–1:50)</span></li>
+      <li><b>Kabelen i kabelklemmen, så X-motoren.</b> Følg merkelappene på kablene: legg først «extruder line» i kabelklemmen ved X-motoren, og koble deretter til X-aksemotoren. <span class="src">(Creality Wiki, tegning ②. Video ca. 1:50–2:00)</span></li>
+      <li><b>Koble til Z-motoren.</b> Kontakten sitter nede ved Z-motoren, ved siden av strøminntaket. <span class="src">(Creality Wiki, tegning ③. Video ca. 2:00)</span></li>
+      <li><b>Sjekk spenningsbryteren, og slå så på strømmen.</b> Nett på 200–240 V: velg 230 V. Nett på 100–120 V: velg 115 V. Fabrikkinnstilling er 230 V. <span class="src">(Creality Wiki, advarselen og tegning ④. Video ca. 2:05–2:10)</span></li>
+    </ol>
+    <p>På tegningen går kabelen fra Z-motoren og opp langs søylen til X-motoren. Derfra går den i en bue til printhodet. Hvilken kontakt på motorene som er hvilken, står bare på merkelappene på kablene. <span class="uncertain">usikkert</span> Jeg fant ingen offisiell tekst som beskriver kontaktene, kabelfarger eller pinner, og jeg har ikke gjettet. Følg merkelappene og se på videoen.</p>
+
+    <h3>To kabler som ofte glemmes tidligere i monteringen</h3>
+    <ul>
+      <li><b>Kabelen til filamentsensoren.</b> Rammen settes ned i bunnen, og sensorkabelen føres gjennom bunnplaten og kobles sammen. Pass på at profilen ikke presser mot kabelen. <span class="src">(<a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/quick-start-guide/how-to-assemble-equipment-quickly">Creality Wiki</a>, tegning for «Gantry frame»)</span></li>
+      <li><b>Skjermkabelen.</b> Skjermen festes til høyre side av bunnen med tre M4×10-skruer, og tegningen viser «Display wiring» ved skjermen. <span class="src">(Creality Wiki, tegning for «Display screen». Video ca. 1:00–1:15)</span> <span class="uncertain">usikkert</span> Om kabelen skal settes i før eller etter at skruene sitter, går ikke tydelig fram av teksten. Se videoen.</li>
+    </ul>
+
+    <h3>Sjekkliste for kabelføring</h3>
+    <ul class="check">
+      <li><label><input type="checkbox"> Strømledningen er ute, og printeren er av mens jeg kobler til.</label></li>
+      <li><label><input type="checkbox"> Kabelen sitter helt inne i adapterkortet på printhodet, og festeklemmen er skrudd fast.</label></li>
+      <li><label><input type="checkbox"> Kabelen ligger i kabelklemmen ved X-motoren før jeg kobler til X-motoren.</label></li>
+      <li><label><input type="checkbox"> Kontaktene til X-motoren og Z-motoren sitter helt inne og er ikke bøyd eller skjøvet skeivt.</label></li>
+      <li><label><input type="checkbox"> Sensorkabelen til filamentet er ikke klemt av rammen.</label></li>
+      <li><label><input type="checkbox"> Skjermkabelen er koblet til, og skjermen sitter fast.</label></li>
+      <li><label><input type="checkbox"> Spenningsbryteren står på 230 V (eller 115 V hvis nettet er 100–120 V).</label></li>
+      <li><label><input type="checkbox"> Jeg har flyttet printhodet for hånd fra side til side (printeren av) og sett at ingen kabler henger fast eller strammes. <span class="uncertain">eget råd, ikke fra Creality</span></label></li>
+    </ul>
+
+    <h3>Hvor det typisk går galt</h3>
+    <div class="tw"><table>
+      <thead><tr><th>Feil</th><th>Det du ser</th><th>Hva du gjør</th></tr></thead>
+      <tbody>
+        <tr><td>Kabelen til printhodet sitter ikke riktig i adapterkortet</td><td>Feilkode <a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/troubleshooting/2509-error-trouble-shooting">2509</a> (dysen varmes ikke) eller <a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/troubleshooting/2194-error-trouble-shooting">2194</a> (Z-aksen finner ikke hjem under selvtest)</td><td>Sett inn den 30-pins flatkabelen på nytt, både ved adapterkortet og ved hovedkortet. <span class="src">(Creality Wiki)</span></td></tr>
+        <tr><td>Ekstrudermotoren går ikke</td><td>Ekstruder-giret roterer ikke</td><td>Sett inn flatkabelen til adapterkortet på nytt. <span class="src">(<a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/troubleshooting/extruder-motor-not-turning%E3%80%81extruder-gear-not-turning">Creality Wiki</a>)</span></td></tr>
+        <tr><td>Motorkontakter løse, skeive eller byttet om</td><td>Feilkode <a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/troubleshooting/2022-error-trouble-shooting">2022</a>, X/Y/Z finner ikke hjem, motoren rykker</td><td>Se etter bøyde pinner på X- og Z-motoren, og at X- og Y-kablene sitter fast på hovedkortet. <span class="src">(Creality Wiki)</span></td></tr>
+        <tr><td>Filamentsensorkabelen er klemt eller ikke koblet til</td><td>Printeren sier at filamentet er brukt opp, selv om det ikke er det</td><td>Demonter rammen, sett inn sensorkabelen på nytt (også ved hovedkortet), og pass på at den ikke klemmes. <span class="src">(<a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/troubleshooting/material-breakage-detection-failure">Creality Wiki</a>)</span></td></tr>
+        <tr><td>Feil spenning på bryteren</td><td>Kan skade printeren</td><td>Sett bryteren på riktig nettspenning før du kobler til strøm. <span class="src">(Creality Wiki)</span></td></tr>
+      </tbody>
+    </table></div>
+    <p class="src">Kilder: <a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/quick-start-guide/how-to-assemble-equipment-quickly">Creality Wiki – How to assemble equipment quickly</a>, <a href="https://youtu.be/rhe1TS9Ju2M">Creality – Ender-3 V3 KE unpacking (YouTube)</a> og Creality Wiki-sidene for feilkoder. Tidspunktene i videoen er omtrentlige.</p>
+    <div class="note"><b>Ikke dekket av kildene:</b> Creality viser kabelføringen bare i tegning og video, med lite tekst. Står du fast, kan du sende bilder og serienummer til <a href="mailto:cs@creality.com">cs@creality.com</a>. Det er adressen Creality oppgir på feilsøkingssidene.</div>
+  </section>
+
+  <!-- ================= BYTTE HOTEND ================= -->
+  <section id="hotend">
+    <h2>Bytte hotend steg for steg (og legge kablene)</h2>
+    <p class="lead">Slik bytter du hele hotend-settet på KE (Creality <code>4001030130</code>). Stegene følger Crealitys egen servicevideo. Tidspunktene er omtrentlige.</p>
+
+    <div class="note err"><b>Sikkerhet:</b> Slå av printeren og trekk ut strømledningen. La hotenden bli kald før du rører den. <span class="src">(Creality-videoen; Micro Swiss sin instruksjon sier romtemperatur)</span><br>Når du bare bytter dysen, er det omvendt: da skal hotenden være varm. <span class="src">(<a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/quick-start-guide/accessories-maintenance">Creality Wiki – dysebytte</a>)</span></div>
+
+    <h3>Verktøy</h3>
+    <ul>
+      <li>Små unbrakonøkler. <span class="uncertain">usikkert</span> Creality oppgir ikke størrelsene for originalsettet. Micro Swiss oppgir 1,5 mm og 2,0 mm for sitt KE-sett, og en 7 mm fastnøkkel til dysen. <span class="src">(<a href="https://3d.nice-cdn.com/upload/file/M3103_FlowTech_Installation_-_Ender-3_V3_KE.pdf">Micro Swiss, instruksjon M3103</a>)</span></li>
+      <li>Det nye hotend-settet. Passer ikke til KE: <code>4001030134</code>. Se <a href="#deler">Reservedeler</a>.</li>
+      <li>Telefon til å ta bilder før du kobler fra noe. <span class="uncertain">eget råd, ikke fra Creality</span></li>
+    </ul>
+
+    <h3>Fremgangsmåte</h3>
+    <ol class="steps">
+      <li><b>Ta ut filamentet.</b> «Please take out the consumables before replacing the nozzle kit.» <span class="src">(<a href="https://www.youtube.com/watch?v=dGv85v7VUzI">Creality: Replacement hotend kit</a>, ca. 0:04)</span></li>
+      <li><b>Slå av printeren og trekk ut strømledningen.</b> <span class="src">(videoen, ca. 0:08)</span></li>
+      <li><b>Ta av viftekassen.</b> Skru ut de tre skruene og ta kassen av. <span class="src">(videoen, ca. 0:12)</span> Micro Swiss sier at du også må koble de to viftekablene fra kortet på printhodet. <span class="src">(Micro Swiss)</span> <span class="uncertain">usikkert</span> Det vises ikke i Creality-videoen, og jeg vet ikke om det gjelder originalsettet.</li>
+      <li><b>Skru av CR Touch.</b> Skru ut de to festeskruene. CR Touch henger i sin egen kabel mens du jobber, og trenger ikke kobles fra. <span class="src">(videoen, ca. 0:16. Micro Swiss sier det samme)</span></li>
+      <li><b>Løsne topp-skruen</b> («loosen the top thread») på kjøleblokken. <span class="src">(videoen, ca. 0:24. Micro Swiss: skruen sitter på baksiden av kjøleblokken)</span></li>
+      <li><b>Ta av silikonsokken.</b> Det er en kant nederst på hotenden, så sokken må klemmes sammen og trekkes over kanten. <span class="src">(videoen, ca. 0:32. Micro Swiss for kanten)</span></li>
+      <li><b>Ta av det gamle settet</b> og koble kabelen fra adapterkortet. Ta et bilde først så du ser hvordan kabelen satt. <span class="src">(videoen, ca. 0:36–1:05. At kabelen kobles fra her, ser du i videoen, men det står ikke i teksten.)</span></li>
+      <li><b>Sett inn det nye settet.</b> <span class="src">(videoen, ca. 1:05–1:30)</span></li>
+      <li><b>Sett kabelen på adapterkortet.</b> Vær nøye med at <em>hullene</em> ligger på linje («make sure to align the holes»). Videoen markerer kontakten med en rød ring. <span class="src">(videoen, ca. 1:36–1:50)</span></li>
+      <li><b>Stram topp-skruen.</b> <span class="src">(videoen, ca. 1:52)</span></li>
+      <li><b>Skru CR Touch fast igjen</b> med de to skruene. <span class="src">(videoen, ca. 2:00)</span></li>
+      <li><b>Sett på silikonsokken.</b> Micro Swiss: la utsnittet i sokken ligge over kablene fra varmeelementet, og skyv sokken opp til den dekker toppen. <span class="src">(videoen, ca. 2:04. Micro Swiss for utsnittet)</span></li>
+      <li><b>Monter viftekassen</b> med de tre skruene. Hvis du koblet fra viftekablene, setter du dem på igjen først. <span class="src">(videoen, ca. 2:08–2:20. Micro Swiss for viftekablene)</span></li>
+      <li><b>Koble til strøm, slå på og kjør selvtest.</b> Gå til «Settings», «Equipment self-test», «Select all» og «Start detection». Vent til selvtesten er ferdig. <span class="src">(videoen, ca. 2:24–2:50)</span></li>
+    </ol>
+
+    <h3>Hvilke kabler er det, og hvor skal de?</h3>
+    <ul>
+      <li><b>Originalsettet (Creality):</b> videoen viser én kabel som settes på adapterkortet, med hullene på linje. Hvilken kontakt på kortet den skal på, kan du se i videoen ca. 1:36–1:50. <span class="src">(Creality-videoen)</span></li>
+      <li><b>Tilleggsutstyr fra Micro Swiss:</b> instruksjonen deres snakker om «heater» og «thermistor»-kontakter som kobles til «matching ports» på kortet. <span class="src">(Micro Swiss)</span> En kommentar på Reddit sier «thick-heater, thin-thermistor», altså den tykke kontakten er varmeelementet og den tynne er termistoren. <span class="src">(<a href="https://www.reddit.com/r/ender3/comments/18ipnzl/which_wire_goes_where/">r/ender3</a>)</span> <span class="uncertain">usikkert</span> Det er én brukerkommentar, og jeg vet ikke om den passer til akkurat ditt sett.</li>
+      <li>Jeg fant ingen offisiell kilde som oppgir kabelfarger eller hvilken pinne som er hva, og har ikke funnet på noe. Ta bilde før du kobler fra, og sammenlign med videoen.</li>
+    </ul>
+
+    <h3>Sjekkliste før du slår på</h3>
+    <ul class="check">
+      <li><label><input type="checkbox"> Printeren er av, og strømledningen er ute.</label></li>
+      <li><label><input type="checkbox"> Kabelen sitter helt inne på adapterkortet, med hullene på linje.</label></li>
+      <li><label><input type="checkbox"> Topp-skruen er strammet.</label></li>
+      <li><label><input type="checkbox"> Silikonsokken sitter slik at utsnittet ligger over kablene.</label></li>
+      <li><label><input type="checkbox"> CR Touch sitter fast med begge skruene, og kabelen til den er koblet til.</label></li>
+      <li><label><input type="checkbox"> Viftekablene er koblet til igjen, hvis du tok dem av.</label></li>
+      <li><label><input type="checkbox"> Ingen kabler ligger mellom viftekassen og printhodet. Wire interference kan gi vifteproblemer. <span class="src">(<a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/troubleshooting/fan-does-not-work-fan-abnormal-noise">Creality Wiki – vifter</a>)</span></label></li>
+      <li><label><input type="checkbox"> Viftekassen er skrudd på med alle tre skruene.</label></li>
+    </ul>
+
+    <h3>Hvor det typisk går galt</h3>
+    <ul>
+      <li><b>Kabelen sitter ikke helt inne eller er skeiv.</b> Det gir <a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/troubleshooting/2509-error-trouble-shooting">feil 2509</a> (dysen varmes ikke) eller <a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/troubleshooting/2194-error-trouble-shooting">feil 2194</a>. Sett inn kabelen på nytt. <span class="src">(Creality Wiki)</span></li>
+      <li><b>Vifter som ikke går eller støyer.</b> Creality lister løse eller skadde vifteledninger og ledninger som kommer i veien som mulige årsaker. <span class="src">(<a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke/troubleshooting/fan-does-not-work-fan-abnormal-noise">Creality Wiki</a>)</span></li>
+      <li><b>Kablene klemmes av viftekassen eller sokken.</b> <span class="uncertain">usikkert</span> Ingen kilde sier dette rett ut for KE. Det er en mulig følge av punktene over, så se etter før du skrur til.</li>
+    </ul>
+
+    <h3>Test etter montering</h3>
+    <ol class="steps">
+      <li><b>Selvtest på skjermen.</b> Settings, Equipment self-test, Select all, Start detection. <span class="src">(Creality-videoen, ca. 2:24)</span></li>
+      <li><b>Sjekk temperaturen kald.</b> Rundt romtemperatur er normalt. Se <a href="#feil">Feilsøking</a>.</li>
+      <li><b>Varm opp hotenden</b> til for eksempel 200 °C og følg kurven. Den skal stige jevnt og holde seg stabil.</li>
+      <li><b>Kjør PID-kalibrering.</b> Se <a href="#kal">Kalibrering</a>.</li>
+      <li><b>Nivellér på nytt.</b> Se <a href="#kal">Kalibrering</a>.</li>
+      <li><b>Sjekk at begge viftene går</b> når hotenden er varm.</li>
+    </ol>
+    <p class="src">Kilder: <a href="https://www.youtube.com/watch?v=dGv85v7VUzI">Creality – Service Tutorial Ender-3 V3 KE Replacement hotend kit (YouTube)</a>, listet på <a href="https://wiki.creality.com/en/ender-series/ender-3-v3-ke">Creality Wiki</a>. Micro Swiss: <a href="https://3d.nice-cdn.com/upload/file/M3103_FlowTech_Installation_-_Ender-3_V3_KE.pdf">installasjonsinstruksjon for FlowTech-hotend til KE</a> (et tilleggsutstyr, ikke originalsettet). Creality har også videoer for <a href="https://www.creality.com/video/creality-ender-3-v3-ke">å bytte adapterkortet på printhodet</a> og <a href="https://www.youtube.com/watch?v=FDjs3Ij1cq0">feilsøking av ekstrudermotoren</a>.</p>
   </section>
 
   <!-- ================= RESERVEDELER ================= -->
@@ -266,7 +391,7 @@ SAVE_CONFIG</code></pre>
 
   <footer>
     <p><a href="https://tussienorway.github.io/">← Tilbake til oversikten over alle nettsidene mine</a></p>
-    <p>Produktbildene tilhører Creality. Priser og lagerstatus kan endre seg, så sjekk alltid i butikken.</p>
+    <p>Produktbildene og monteringstegningen tilhører Creality. Priser og lagerstatus kan endre seg, så sjekk alltid i butikken.</p>
   </footer>
 </main>
 
@@ -282,6 +407,12 @@ SAVE_CONFIG</code></pre>
       ${e.status ? `<span class="badge b-${esc(e.status)}">${esc(e.status)}</span>` : ''}
       ${e.eksempel ? '<span class="badge b-eks">EKSEMPEL</span>' : ''}
       <div>${esc(e.tekst)}</div></li>`).join('') : '<li>Ingen oppføringer ennå.</li>';
+
+  document.querySelectorAll('ul.check input').forEach((box, i) => {
+    const key = 'sjekk-' + (box.closest('section') || {}).id + '-' + i;
+    try { box.checked = localStorage.getItem(key) === '1'; } catch {}
+    box.addEventListener('change', () => { try { localStorage.setItem(key, box.checked ? '1' : '0'); } catch {} });
+  });
 
   document.querySelectorAll('pre').forEach(pre => {
     const b = document.createElement('button'); b.className = 'copy'; b.type = 'button'; b.textContent = 'Kopier';
